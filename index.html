@@ -1,0 +1,3641 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>网络安全合规巡检平台</title>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    :root {
+      --bg-primary: #ffffff;
+      --bg-secondary: #ffffff;
+      --bg-tertiary: #f8fafc;
+      --bg-card: #ffffff;
+      --border-color: #e2e8f0;
+      --border-light: #cbd5e1;
+      --text-primary: #1e293b;
+      --text-secondary: #64748b;
+      --text-muted: #94a3b8;
+      --accent-primary: #3b82f6;
+      --accent-hover: #2563eb;
+      --accent-green: #10b981;
+      --accent-yellow: #f59e0b;
+      --accent-red: #ef4444;
+      --accent-purple: #8b5cf6;
+      --accent-cyan: #0891b2;
+      --gradient-start: #ffffff;
+      --gradient-end: #ffffff;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* Background Pattern */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: #ffffff;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Grid Pattern Overlay */
+    body::after {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .app-container {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 260px;
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border-color);
+      padding: 24px 0;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      box-shadow: 2px 0 8px rgba(0, 0, 0, 0.02);
+    }
+
+    .logo {
+      padding: 0 24px 32px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-icon {
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-purple));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+    }
+
+    .logo-icon i {
+      color: white;
+    }
+
+    .logo-text {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+    }
+
+    .logo-text span {
+      color: var(--accent-primary);
+    }
+
+    .nav-menu {
+      flex: 1;
+      padding: 0 12px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-radius: 10px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-bottom: 4px;
+      font-size: 14px;
+    }
+
+    .nav-item:hover {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+
+    .nav-item.active {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.08));
+      color: var(--accent-primary);
+      border: 1px solid rgba(59, 130, 246, 0.15);
+    }
+
+    .nav-item i {
+      width: 20px;
+      height: 20px;
+    }
+
+    .nav-section {
+      padding: 16px 16px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Top Header */
+    .top-header {
+      height: 64px;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-title {
+      font-size: 18px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-title i {
+      color: var(--accent-primary);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .header-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-secondary);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .header-btn:hover {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      border-color: var(--border-light);
+    }
+
+    .header-btn.primary {
+      background: linear-gradient(135deg, var(--accent-primary), #2563eb);
+      border-color: var(--accent-primary);
+      color: white;
+    }
+
+    .header-btn.primary:hover {
+      background: linear-gradient(135deg, var(--accent-hover), var(--accent-primary));
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    /* Page Content */
+    .page-content {
+      flex: 1;
+      padding: 32px;
+      overflow-y: auto;
+    }
+
+    /* Page Sections */
+    .page {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .page-header {
+      margin-bottom: 28px;
+    }
+
+    .page-title {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .page-title i {
+      color: var(--accent-primary);
+    }
+
+    .page-desc {
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-title i {
+      color: var(--accent-primary);
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      margin-bottom: 28px;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+    }
+
+    .stat-card.blue::before { background: linear-gradient(90deg, var(--accent-primary), var(--accent-cyan)); }
+    .stat-card.green::before { background: linear-gradient(90deg, var(--accent-green), #34d399); }
+    .stat-card.yellow::before { background: linear-gradient(90deg, var(--accent-yellow), #fbbf24); }
+    .stat-card.red::before { background: linear-gradient(90deg, var(--accent-red), #f87171); }
+
+    .stat-label {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .stat-card.blue .stat-value { color: var(--accent-primary); }
+    .stat-card.green .stat-value { color: var(--accent-green); }
+    .stat-card.yellow .stat-value { color: var(--accent-yellow); }
+    .stat-card.red .stat-value { color: var(--accent-red); }
+
+    /* Filter Bar */
+    .filter-bar {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .search-input {
+      flex: 1;
+      min-width: 240px;
+      padding: 10px 16px;
+      padding-left: 40px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-size: 14px;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .search-input:focus {
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .search-wrapper {
+      position: relative;
+      flex: 1;
+      min-width: 240px;
+    }
+
+    .search-wrapper i {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      width: 18px;
+      height: 18px;
+    }
+
+    .filter-select {
+      padding: 10px 16px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-size: 14px;
+      outline: none;
+      cursor: pointer;
+      min-width: 140px;
+    }
+
+    .filter-select:focus {
+      border-color: var(--accent-primary);
+    }
+
+    /* Tables */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .data-table th {
+      text-align: left;
+      padding: 14px 16px;
+      background: var(--bg-tertiary);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .data-table th:first-child {
+      border-radius: 8px 0 0 8px;
+    }
+
+    .data-table th:last-child {
+      border-radius: 0 8px 8px 0;
+    }
+
+    .data-table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 14px;
+    }
+
+    .data-table tbody tr {
+      transition: all 0.2s;
+    }
+
+    .data-table tbody tr:hover {
+      background: rgba(59, 130, 246, 0.04);
+    }
+
+    .data-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .badge-critical {
+      background: rgba(239, 68, 68, 0.1);
+      color: #dc2626;
+    }
+
+    .badge-major {
+      background: rgba(245, 158, 11, 0.1);
+      color: #d97706;
+    }
+
+    .badge-auto {
+      background: rgba(16, 185, 129, 0.1);
+      color: #059669;
+    }
+
+    .badge-semi {
+      background: rgba(139, 92, 246, 0.1);
+      color: #7c3aed;
+    }
+
+    .badge-manual {
+      background: rgba(59, 130, 246, 0.1);
+      color: #2563eb;
+    }
+
+    .badge-yes {
+      background: rgba(239, 68, 68, 0.1);
+      color: #dc2626;
+    }
+
+    .badge-no {
+      background: rgba(100, 116, 139, 0.1);
+      color: var(--text-muted);
+    }
+
+    /* Toggle Switch */
+    .toggle {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      display: inline-block;
+    }
+
+    .toggle input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #e2e8f0;
+      border: 1px solid #cbd5e1;
+      transition: 0.3s;
+      border-radius: 24px;
+    }
+
+    .toggle-slider::before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 2px;
+      bottom: 2px;
+      background-color: #ffffff;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+      transition: 0.3s;
+      border-radius: 50%;
+    }
+
+    .toggle input:checked + .toggle-slider {
+      background-color: var(--accent-primary);
+      border-color: var(--accent-primary);
+    }
+
+    .toggle input:checked + .toggle-slider::before {
+      transform: translateX(20px);
+      background-color: white;
+    }
+
+    /* Action Buttons */
+    .action-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .action-btn:hover {
+      background: var(--accent-primary);
+      border-color: var(--accent-primary);
+      color: white;
+    }
+
+    .action-btn.danger:hover {
+      background: var(--accent-red);
+      border-color: var(--accent-red);
+    }
+
+    /* Device Selection */
+    .device-grid {
+      width: 100%;
+      min-height: 200px;
+    }
+
+    .device-card {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .device-card:hover {
+      border-color: var(--accent-primary);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+    }
+
+    .device-row.selected {
+      background: rgba(59, 130, 246, 0.08);
+    }
+
+    .device-name {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .device-ip {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--accent-primary);
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .device-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .device-meta span {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Category Selection */
+    .category-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+    }
+
+    .category-chip {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .category-chip:hover {
+      border-color: var(--accent-primary);
+    }
+
+    .category-chip.selected {
+      border-color: var(--accent-primary);
+      background: rgba(59, 130, 246, 0.08);
+    }
+
+    .category-chip .count {
+      margin-left: auto;
+      background: var(--bg-secondary);
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* Template Grid */
+    .template-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 12px;
+    }
+
+    .template-chip {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 16px;
+      background: var(--bg-tertiary);
+      border: 2px solid var(--border-color);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .template-chip:hover {
+      border-color: var(--accent-primary);
+    }
+
+    .template-chip.selected {
+      border-color: var(--accent-primary);
+      background: rgba(59, 130, 246, 0.08);
+    }
+
+    .template-chip.zero-tolerance {
+      border-color: var(--accent-red);
+      background: rgba(239, 68, 68, 0.05);
+    }
+
+    .template-chip.zero-tolerance:hover {
+      border-color: var(--accent-red);
+      background: rgba(239, 68, 68, 0.1);
+    }
+
+    .template-chip.zero-tolerance.selected {
+      border-color: var(--accent-red);
+      background: rgba(239, 68, 68, 0.15);
+    }
+
+    .template-chip .template-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-secondary);
+    }
+
+    .template-chip.selected .template-icon {
+      background: var(--accent-primary);
+      color: white;
+    }
+
+    .template-chip.zero-tolerance.selected .template-icon {
+      background: var(--accent-red);
+      color: white;
+    }
+
+    .template-chip .template-info {
+      flex: 1;
+    }
+
+    .template-chip .template-name {
+      font-weight: 600;
+      font-size: 14px;
+      margin-bottom: 2px;
+    }
+
+    .template-chip .template-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .template-chip .check-count {
+      background: var(--bg-secondary);
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    /* Template Config Grid */
+    .template-config-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 20px;
+    }
+
+    .template-config-card {
+      background: var(--bg-tertiary);
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all 0.2s;
+    }
+
+    .template-config-card:hover {
+      border-color: var(--accent-primary);
+    }
+
+    .template-config-card.zero-tolerance {
+      border-color: var(--accent-red);
+    }
+
+    .template-config-card.zero-tolerance:hover {
+      border-color: var(--accent-red);
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
+    }
+
+    .template-config-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 20px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .template-config-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--accent-primary);
+      color: white;
+    }
+
+    .template-config-card.zero-tolerance .template-config-icon {
+      background: var(--accent-red);
+    }
+
+    .template-config-info {
+      flex: 1;
+    }
+
+    .template-config-name {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .template-config-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .template-config-count {
+      text-align: center;
+      padding: 16px;
+      background: var(--bg-primary);
+    }
+
+    .template-config-count .count-num {
+      font-size: 32px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--accent-primary);
+    }
+
+    .template-config-card.zero-tolerance .count-num {
+      color: var(--accent-red);
+    }
+
+    .template-config-count .count-label {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .template-config-body {
+      padding: 16px 20px;
+    }
+
+    .template-config-categories {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .template-config-category {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .template-config-category i {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* Check Item Chip for template editor */
+    .check-item-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .check-item-chip:hover {
+      border-color: var(--accent-primary);
+      background: rgba(59, 130, 246, 0.05);
+    }
+
+    .check-item-chip.selected {
+      border-color: var(--accent-primary);
+      background: rgba(59, 130, 246, 0.1);
+      color: var(--accent-primary);
+    }
+
+    .check-item-chip i {
+      display: none;
+    }
+
+    .check-item-chip.selected i {
+      display: block;
+    }
+
+    .template-config-actions {
+      display: flex;
+      gap: 8px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border-color);
+    }
+
+    /* Progress Bar */
+    .progress-bar {
+      height: 8px;
+      background: var(--bg-tertiary);
+      border-radius: 4px;
+      overflow: hidden;
+      margin: 16px 0;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-primary), var(--accent-cyan));
+      border-radius: 4px;
+      transition: width 0.3s ease;
+    }
+
+    /* Log Output */
+    .log-output {
+      background: #1e293b;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      max-height: 300px;
+      overflow-y: auto;
+      line-height: 1.8;
+      color: #e2e8f0;
+    }
+
+    .log-line {
+      display: flex;
+      gap: 12px;
+    }
+
+    .log-time {
+      color: #64748b;
+      flex-shrink: 0;
+    }
+
+    .log-info { color: #60a5fa; }
+    .log-success { color: #34d399; }
+    .log-warning { color: #fbbf24; }
+    .log-error { color: #f87171; }
+
+    /* Report List */
+    .report-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .report-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 20px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .report-item:hover {
+      border-color: var(--accent-primary);
+      transform: translateX(4px);
+    }
+
+    .report-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .report-icon.success {
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--accent-green);
+    }
+
+    .report-icon.warning {
+      background: rgba(245, 158, 11, 0.1);
+      color: var(--accent-yellow);
+    }
+
+    .report-icon.error {
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--accent-red);
+    }
+
+    .report-info {
+      flex: 1;
+    }
+
+    .report-name {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .report-meta {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .report-status {
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .report-status.success {
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--accent-green);
+    }
+
+    .report-status.warning {
+      background: rgba(245, 158, 11, 0.1);
+      color: var(--accent-yellow);
+    }
+
+    .report-status.error {
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--accent-red);
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      width: 90%;
+      max-width: 600px;
+      max-height: 80vh;
+      overflow: hidden;
+      transform: scale(0.9);
+      transition: all 0.3s;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    }
+
+    .modal-overlay.active .modal {
+      transform: scale(1);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .modal-close {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      background: var(--bg-tertiary);
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .modal-close:hover {
+      background: var(--accent-red);
+      color: white;
+    }
+
+    .modal-body {
+      padding: 24px;
+      overflow-y: auto;
+      max-height: calc(80vh - 140px);
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      padding: 16px 24px;
+      border-top: 1px solid var(--border-color);
+    }
+
+    /* Form */
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 10px 14px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-size: 14px;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .form-input:focus {
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    /* Toast */
+    .toast-container {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .toast {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 20px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    .toast.success { border-left: 3px solid var(--accent-green); }
+    .toast.error { border-left: 3px solid var(--accent-red); }
+    .toast.warning { border-left: 3px solid var(--accent-yellow); }
+
+    .toast-icon {
+      width: 20px;
+      height: 20px;
+    }
+
+    .toast.success .toast-icon { color: var(--accent-green); }
+    .toast.error .toast-icon { color: var(--accent-red); }
+    .toast.warning .toast-icon { color: var(--accent-yellow); }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg-tertiary);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-light);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--text-muted);
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+    }
+
+    .empty-state i {
+      width: 64px;
+      height: 64px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    /* Two Column Layout */
+    .two-column {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    .column-full {
+      grid-column: 1 / -1;
+    }
+
+    /* Responsive */
+    @media (max-width: 1200px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .two-column {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        display: none;
+      }
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Report Styles */
+    .report-section {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--accent-primary);
+    }
+
+    .report-table-wrap {
+      overflow-x: auto;
+    }
+
+    .report-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    .report-table th {
+      background: var(--bg-tertiary);
+      padding: 10px 12px;
+      text-align: left;
+      font-weight: 500;
+      border: 1px solid var(--border-color);
+    }
+
+    .report-table td {
+      padding: 10px 12px;
+      border: 1px solid var(--border-color);
+    }
+
+    .report-table tr.even {
+      background: var(--bg-secondary);
+    }
+
+    .report-table tr.odd {
+      background: var(--bg-primary);
+    }
+
+    .report-table tr.second_title th {
+      background: var(--bg-tertiary);
+      text-align: center;
+    }
+
+    .vuln-summary {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 16px;
+      padding: 12px;
+      background: var(--bg-tertiary);
+      border-radius: 6px;
+    }
+
+    .vuln-item {
+      font-size: 14px;
+    }
+
+    .vuln-item.high { color: var(--accent-red); }
+    .vuln-item.middle { color: var(--accent-yellow); }
+    .vuln-item.low { color: var(--accent-green); }
+
+    .vuln-table th,
+    .vuln-table td {
+      vertical-align: top;
+    }
+
+    .vuln-dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+
+    .vuln-dot.high { background: var(--accent-red); }
+    .vuln-dot.middle { background: var(--accent-yellow); }
+    .vuln-dot.low { background: var(--accent-green); }
+
+    .risk-low { color: var(--accent-green); font-weight: 500; }
+    .risk-medium { color: var(--accent-yellow); font-weight: 500; }
+    .risk-high { color: var(--accent-red); font-weight: 500; }
+
+    tr.high-risk { background: rgba(239, 68, 68, 0.05); }
+    tr.middle-risk { background: rgba(245, 158, 11, 0.05); }
+    tr.low-risk { background: rgba(16, 185, 129, 0.05); }
+
+    /* Task List Panel */
+    .report-layout {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 24px;
+      min-height: calc(100vh - 200px);
+    }
+
+    .task-list-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      height: fit-content;
+      max-height: calc(100vh - 200px);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .task-list-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .task-list-header h3 {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .task-list {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .task-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .task-item:hover {
+      border-color: var(--accent-primary);
+      background: rgba(59, 130, 246, 0.04);
+    }
+
+    .task-item.active {
+      border-color: var(--accent-primary);
+      background: rgba(59, 130, 246, 0.08);
+    }
+
+    .task-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .task-name {
+      font-weight: 500;
+      font-size: 14px;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .task-time {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .task-status {
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .task-status.success {
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--accent-green);
+    }
+
+    .task-status.warning {
+      background: rgba(245, 158, 11, 0.1);
+      color: var(--accent-yellow);
+    }
+
+    .task-status.error {
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--accent-red);
+    }
+
+    .report-content {
+      min-width: 0;
+    }
+
+    /* Pagination - Element UI Style */
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 12px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border-color);
+      margin-top: 16px;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .pagination-total {
+      margin-right: auto;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .pagination-sizes {
+      display: flex;
+      align-items: center;
+    }
+
+    .page-size-select {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .page-size-select select {
+      appearance: none;
+      padding: 6px 28px 6px 10px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      font-size: 13px;
+      cursor: pointer;
+      outline: none;
+    }
+
+    .page-size-select select:focus {
+      border-color: var(--accent-primary);
+    }
+
+    .page-size-select::after {
+      content: '';
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      border: 4px solid transparent;
+      border-top-color: var(--text-muted);
+    }
+
+    .btn-prev, .btn-next {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s;
+      padding: 0;
+    }
+
+    .btn-prev:hover:not(:disabled), .btn-next:hover:not(:disabled) {
+      color: var(--accent-primary);
+      border-color: var(--accent-primary);
+    }
+
+    .btn-prev:disabled, .btn-next:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-prev:disabled, .btn-next:disabled {
+      color: var(--text-muted);
+    }
+
+    .el-pager {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .el-pager li {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 32px;
+      height: 32px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+      padding: 0 8px;
+    }
+
+    .el-pager li:hover:not(.is-active) {
+      color: var(--accent-primary);
+      border-color: var(--accent-primary);
+    }
+
+    .el-pager li.is-active {
+      background: var(--accent-primary);
+      border-color: var(--accent-primary);
+      color: white;
+      cursor: default;
+    }
+
+    .el-pager li.more {
+      border: none;
+      background: none;
+      cursor: default;
+    }
+
+    .el-pager li.more:hover {
+      color: var(--text-secondary);
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="logo">
+        <div class="logo-icon">
+          <i data-lucide="shield-check"></i>
+        </div>
+        <div class="logo-text">安全<span>巡检</span></div>
+      </div>
+
+      <nav class="nav-menu">
+        <div class="nav-section">主菜单</div>
+        <div class="nav-item active" data-page="config">
+          <i data-lucide="list-checks"></i>
+          <span>巡检项配置</span>
+        </div>
+        <div class="nav-item" data-page="template">
+          <i data-lucide="layout-template"></i>
+          <span>巡检模板配置</span>
+        </div>
+        <div class="nav-item" data-page="execute">
+          <i data-lucide="play-circle"></i>
+          <span>巡检任务执行</span>
+        </div>
+        <div class="nav-item" data-page="report">
+          <i data-lucide="file-text"></i>
+          <span>巡检报告</span>
+        </div>
+
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Page Content -->
+      <div class="page-content">
+        
+        <!-- Page 1: 巡检项配置 -->
+        <div class="page active" id="page-config">
+          <div class="page-header">
+            <h1 class="page-title">
+              <i data-lucide="list-checks"></i>
+              巡检项配置
+            </h1>
+            <p class="page-desc">管理系统中28项安全检查规则的配置，包括启用状态、严重级别、检查类型等</p>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat-card blue">
+              <div class="stat-label">总检查项</div>
+              <div class="stat-value">28</div>
+            </div>
+            <div class="stat-card green">
+              <div class="stat-label">自动化检查</div>
+              <div class="stat-value">20</div>
+            </div>
+            <div class="stat-card yellow">
+              <div class="stat-label">半自动检查</div>
+              <div class="stat-value">4</div>
+            </div>
+            <div class="stat-card red">
+              <div class="stat-label">零容忍规则</div>
+              <div class="stat-value">12</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i data-lucide="table"></i>
+                检查项列表
+              </h3>
+              <button class="header-btn primary" onclick="openAddModal()">
+                <i data-lucide="plus"></i>
+                新增检查项
+              </button>
+            </div>
+
+            <div class="filter-bar">
+              <div class="search-wrapper">
+                <i data-lucide="search"></i>
+                <input type="text" class="search-input" placeholder="搜索检查项..." id="searchInput" oninput="filterTable()">
+              </div>
+              <select class="filter-select" id="categoryFilter" onchange="filterTable()">
+                <option value="">全部类别</option>
+                <option value="high_risk_ports">高危端口 (3)</option>
+                <option value="high_risk_vulns">高危漏洞 (2)</option>
+                <option value="account_security">账号安全 (3)</option>
+                <option value="password_security">口令安全 (4)</option>
+                <option value="access_control">访问控制 (8)</option>
+                <option value="auth_encryption">认证加密 (3)</option>
+                <option value="supply_chain">供应链 (5)</option>
+              </select>
+              <select class="filter-select" id="typeFilter" onchange="filterTable()">
+                <option value="">全部类型</option>
+                <option value="auto">自动</option>
+                <option value="semi_auto">半自动</option>
+                <option value="manual">人工</option>
+              </select>
+              <select class="filter-select" id="zeroToleranceFilter" onchange="filterTable()">
+                <option value="">全部</option>
+                <option value="true">零容忍</option>
+                <option value="false">非零容忍</option>
+              </select>
+            </div>
+
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>检查项名称</th>
+                  <th>类别</th>
+                  <th>严重级别</th>
+                  <th>检查类型</th>
+                  <th>零容忍</th>
+                  <th>执行器</th>
+                  <th>启用</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="checkItemsTable">
+                <!-- Populated by JS -->
+              </tbody>
+            </table>
+            <!-- 分页控件 -->
+            <div class="pagination" id="checkItemsPagination" style="margin-top: 20px;">
+              <span class="pagination-total">共 <span id="checkItemsTotalCount">28</span> 条</span>
+              <div class="pagination-sizes">
+                <div class="page-size-select">
+                  <select id="checkItemsPageSize" onchange="changeCheckItemsPageSize(this.value)">
+                    <option value="10">10条/页</option>
+                    <option value="20">20条/页</option>
+                    <option value="50">50条/页</option>
+                  </select>
+                </div>
+              </div>
+              <button class="btn-prev" id="checkItemsPrevPage" onclick="prevCheckItemsPage()" disabled>
+                <i data-lucide="chevron-left" style="width:16px;height:16px;"></i>
+              </button>
+              <ul class="el-pager" id="checkItemsPager">
+                <!-- Populated by JS -->
+              </ul>
+              <button class="btn-next" id="checkItemsNextPage" onclick="nextCheckItemsPage()" disabled>
+                <i data-lucide="chevron-right" style="width:16px;height:16px;"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Page 2: 巡检任务执行 -->
+        <div class="page" id="page-execute">
+          <div class="page-header">
+            <h1 class="page-title">
+              <i data-lucide="play-circle"></i>
+              巡检任务执行
+            </h1>
+            <p class="page-desc">选择目标设备和检查项，执行网络安全合规巡检</p>
+          </div>
+
+          <div class="two-column">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">
+                  <i data-lucide="server"></i>
+                  选择设备
+                </h3>
+              </div>
+              <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+                <input type="text" class="form-input" id="quickIpInput" placeholder="快速输入IP（用分号分隔，如: 10.243.127.4;82.221.128.175）" 
+                       style="flex: 1;">
+                <button class="header-btn primary" onclick="confirmIpInput()">确定</button>
+              </div>
+              <div class="device-grid" id="deviceGrid">
+                <!-- Populated by JS -->
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">
+                  <i data-lucide="layout-template"></i>
+                  选择巡检模板
+                </h3>
+              </div>
+              <div class="template-grid" id="templateGrid">
+                <!-- Populated by JS -->
+              </div>
+            </div>
+
+            <div class="card column-full">
+              <div class="card-header">
+                <h3 class="card-title">
+                  <i data-lucide="rocket"></i>
+                  执行巡检
+                </h3>
+                <div style="display: flex; gap: 12px;">
+                  <button class="header-btn" onclick="clearSelection()">清空选择</button>
+                  <button class="header-btn primary" onclick="runInspection()">
+                    <i data-lucide="play"></i>
+                    开始执行
+                  </button>
+                </div>
+              </div>
+
+              <div class="stats-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 20px;">
+                <div class="stat-card blue">
+                  <div class="stat-label">目标设备</div>
+                  <div class="stat-value" id="targetDeviceCount">0</div>
+                </div>
+                <div class="stat-card green">
+                  <div class="stat-label">已检查</div>
+                  <div class="stat-value" id="checkedCount">0</div>
+                </div>
+                <div class="stat-card yellow">
+                  <div class="stat-label">通过</div>
+                  <div class="stat-value" id="passedCount">0</div>
+                </div>
+                <div class="stat-card red">
+                  <div class="stat-label">异常</div>
+                  <div class="stat-value" id="failedCount">0</div>
+                </div>
+              </div>
+
+              <div id="progressSection" style="display: none;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                  <span style="color: var(--text-secondary);">执行进度</span>
+                  <span id="progressText" style="color: var(--accent-primary); font-family: 'JetBrains Mono';">0%</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill" id="progressFill" style="width: 0%;"></div>
+                </div>
+              </div>
+
+              <div class="log-output" id="logOutput" style="display: none;">
+                <!-- Populated by JS -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Page 3: 巡检模板配置 -->
+        <div class="page" id="page-template">
+          <div class="page-header">
+            <h1 class="page-title">
+              <i data-lucide="layout-template"></i>
+              巡检模板配置
+            </h1>
+            <p class="page-desc">管理巡检模板，配置每个模板包含的检查项范围</p>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat-card blue">
+              <div class="stat-label">模板数量</div>
+              <div class="stat-value" id="templateCount">2</div>
+            </div>
+            <div class="stat-card green">
+              <div class="stat-label">全量巡检</div>
+              <div class="stat-value">28</div>
+            </div>
+            <div class="stat-card red">
+              <div class="stat-label">零容忍专项</div>
+              <div class="stat-value">12</div>
+            </div>
+            <div class="stat-card yellow">
+              <div class="stat-label">自定义模板</div>
+              <div class="stat-value">0</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i data-lucide="layout-template"></i>
+                巡检模板列表
+              </h3>
+              <button class="header-btn primary" onclick="openTemplateModal()">
+                <i data-lucide="plus"></i>
+                新增模板
+              </button>
+            </div>
+
+            <div class="template-config-grid" id="templateConfigGrid">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Page 4: 巡检报告 -->
+        <div class="page" id="page-report">
+          <div class="page-header">
+            <h1 class="page-title">
+              <i data-lucide="file-text"></i>
+              安全巡检报告
+            </h1>
+            <p class="page-desc">查看主机安全巡检结果，包含漏洞信息和建议修复方案</p>
+          </div>
+
+          <div class="report-layout">
+            <!-- 任务列表 -->
+            <div class="task-list-panel">
+              <div class="task-list-header">
+                <h3>巡检任务</h3>
+                <button class="header-btn primary" onclick="startNewInspection()" style="padding: 6px 12px; font-size: 12px;">
+                  <i data-lucide="plus" style="width:14px;height:14px;"></i>
+                  新建任务
+                </button>
+              </div>
+              <div class="task-list" id="taskList">
+                <!-- Populated by JS renderTaskList() -->
+              </div>
+              <!-- 分页控件 -->
+              <div class="pagination" id="taskPagination">
+                <span class="pagination-total">共 <span id="taskTotalCount">4</span> 条</span>
+                <div class="pagination-sizes">
+                  <div class="page-size-select">
+                    <select id="taskPageSize" onchange="changeTaskPageSize(this.value)">
+                      <option value="5">5条/页</option>
+                      <option value="10">10条/页</option>
+                      <option value="20">20条/页</option>
+                    </select>
+                  </div>
+                </div>
+                <button class="btn-prev" id="prevPage" onclick="prevTaskPage()" disabled>
+                  <i data-lucide="chevron-left" style="width:16px;height:16px;"></i>
+                </button>
+                <ul class="el-pager" id="taskPager">
+                  <!-- Populated by JS -->
+                </ul>
+                <button class="btn-next" id="nextPage" onclick="nextTaskPage()" disabled>
+                  <i data-lucide="chevron-right" style="width:16px;height:16px;"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- 报告内容 -->
+            <div class="report-content" id="reportContent">
+              <!-- 导出按钮在总览页面顶部 -->
+              <div class="report-section" id="reportSummary">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                  <div class="section-title" style="margin-bottom: 0; padding-bottom: 0; border-bottom: none;">1. 巡检总览</div>
+                  <button class="header-btn primary" onclick="exportCurrentReport()" id="exportBtnInSummary">
+                    <i data-lucide="download"></i>
+                    导出报告
+                  </button>
+                </div>
+                <div class="report-table-wrap">
+                  <table class="report-table">
+                    <tr>
+                      <td valign="top" style="width: 50%;">
+                        <table class="report-table">
+                          <tr class="even">
+                            <th width="140">巡检任务</th>
+                            <td>2026年4月全量巡检</td>
+                          </tr>
+                          <tr class="odd">
+                            <th width="140">巡检时间</th>
+                            <td>2026-04-15 10:00 ~ 10:45</td>
+                          </tr>
+                          <tr class="even">
+                            <th>巡检模板</th>
+                            <td>全量巡检 (28项)</td>
+                          </tr>
+                          <tr class="odd">
+                            <th>巡检主机数</th>
+                            <td id="totalHosts">10台</td>
+                          </tr>
+                        </table>
+                      </td>
+                      <td style="width: 20px;"></td>
+                      <td valign="top" style="width: 50%;">
+                        <table class="report-table">
+                          <tr class="even">
+                            <th width="140">通过率</th>
+                            <td><span style="color: var(--accent-green); font-weight: 600;">89.3%</span></td>
+                          </tr>
+                          <tr class="odd">
+                            <th>高危问题</th>
+                            <td><span style="color: var(--accent-red);">2</span> 项</td>
+                          </tr>
+                          <tr class="even">
+                            <th>中危问题</th>
+                            <td><span style="color: var(--accent-yellow);">5</span> 项</td>
+                          </tr>
+                          <tr class="odd">
+                            <th>低危问题</th>
+                            <td><span style="color: var(--accent-green);">6</span> 项</td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                  </table>
+                </div>
+
+                <div class="section-title" style="margin-top: 24px;">2. 主机巡检结果</div>
+                <table class="report-table">
+                  <thead>
+                    <tr class="second_title">
+                      <th width="25%">IP地址</th>
+                      <th width="20%">主机名</th>
+                      <th width="15%">安全评分</th>
+                      <th width="15%">结果</th>
+                      <th width="25%">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="hostSummaryTable">
+                    <tr class="even">
+                      <td style="font-family: 'JetBrains Mono';">10.243.127.4</td>
+                      <td>srv-core-01</td>
+                      <td><span class="risk-low">85分</span></td>
+                      <td><span class="badge badge-auto">通过</span></td>
+                      <td><button class="action-btn" onclick="showHostDetail('10.243.127.4')"><i data-lucide="eye" style="width:16px;height:16px;"></i></button></td>
+                    </tr>
+                    <tr class="odd">
+                      <td style="font-family: 'JetBrains Mono';">10.243.127.5</td>
+                      <td>srv-db-01</td>
+                      <td><span class="risk-medium">72分</span></td>
+                      <td><span class="badge badge-major">中危</span></td>
+                      <td><button class="action-btn" onclick="showHostDetail('10.243.127.5')"><i data-lucide="eye" style="width:16px;height:16px;"></i></button></td>
+                    </tr>
+                    <tr class="even">
+                      <td style="font-family: 'JetBrains Mono';">10.243.127.6</td>
+                      <td>srv-web-01</td>
+                      <td><span class="risk-low">90分</span></td>
+                      <td><span class="badge badge-auto">通过</span></td>
+                      <td><button class="action-btn" onclick="showHostDetail('10.243.127.6')"><i data-lucide="eye" style="width:16px;height:16px;"></i></button></td>
+                    </tr>
+                    <tr class="odd">
+                      <td style="font-family: 'JetBrains Mono';">10.243.127.7</td>
+                      <td>srv-api-01</td>
+                      <td><span class="risk-high">45分</span></td>
+                      <td><span class="badge badge-critical">高危</span></td>
+                      <td><button class="action-btn" onclick="showHostDetail('10.243.127.7')"><i data-lucide="eye" style="width:16px;height:16px;"></i></button></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- 主机详情报告 -->
+              <div class="report-section" id="reportDetail" style="display: none;">
+                <div style="margin-bottom: 16px;">
+                  <button class="header-btn" onclick="showReportSummary()">
+                    <i data-lucide="arrow-left"></i>
+                    返回总览
+                  </button>
+                </div>
+
+                <div class="section-title" id="detailTitle">1. 主机概况</div>
+                <div class="report-table-wrap">
+                  <table class="report-table">
+                    <tr>
+                      <td valign="top" style="width: 50%;">
+                        <table class="report-table">
+                          <tr class="even">
+                            <th width="120">主机风险</th>
+                            <td><span class="risk-high" id="detailRisk">高危（45分）</span></td>
+                          </tr>
+                          <tr class="odd">
+                            <th width="120">IP地址</th>
+                            <td id="detailIp">10.243.127.7</td>
+                          </tr>
+                          <tr class="even">
+                            <th>操作系统</th>
+                            <td>Linux</td>
+                          </tr>
+                          <tr class="odd">
+                            <th>主机名</th>
+                            <td id="detailHostname">srv-api-01</td>
+                          </tr>
+                          <tr class="even">
+                            <th>Agent状态</th>
+                            <td><span class="badge badge-auto">在线</span></td>
+                          </tr>
+                          <tr class="odd">
+                            <th>巡检时间</th>
+                            <td>2026-04-15 10:30:00</td>
+                          </tr>
+                        </table>
+                      </td>
+                      <td style="width: 20px;"></td>
+                      <td valign="top" style="width: 50%;">
+                        <table class="report-table">
+                          <tr class="even">
+                            <th width="150">巡检模板</th>
+                            <td>全量巡检</td>
+                          </tr>
+                          <tr class="odd">
+                            <th>安全评分</th>
+                            <td id="detailScore">45分</td>
+                          </tr>
+                          <tr class="even">
+                            <th>检查项</th>
+                            <td>28项</td>
+                          </tr>
+                          <tr class="odd">
+                            <th>通过项</th>
+                            <td>22项</td>
+                          </tr>
+                          <tr class="even">
+                            <th>异常项</th>
+                            <td>6项</td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                  </table>
+                </div>
+
+                <div class="section-title" style="margin-top: 24px;">2. 巡检结果详情</div>
+                <div class="vuln-summary">
+                  <span class="vuln-item high">高危 [<span>2</span>]</span>
+                  <span class="vuln-item middle">中危 [<span>3</span>]</span>
+                  <span class="vuln-item low">低危 [<span>1</span>]</span>
+                </div>
+                <table class="report-table vuln-table">
+                  <thead>
+                    <tr class="second_title">
+                      <th width="15%">检查项</th>
+                      <th width="10%">严重级别</th>
+                      <th width="55%">问题描述</th>
+                      <th width="20%">修复建议</th>
+                    </tr>
+                  </thead>
+                  <tbody id="detailResultTable">
+                    <tr class="even">
+                      <td>弱口令检查</td>
+                      <td><span class="badge badge-critical">严重</span></td>
+                      <td>发现存在弱口令账户：admin/123456, root/root123</td>
+                      <td>立即修改为强密码策略，密码长度不小于12位</td>
+                    </tr>
+                    <tr class="odd">
+                      <td>高危端口开放</td>
+                      <td><span class="badge badge-critical">严重</span></td>
+                      <td>检测到高危端口22(SSH)、3306(MySQL)对公网开放</td>
+                      <td>限制22、3306端口访问源IP，仅允许运维网段访问</td>
+                    </tr>
+                    <tr class="even">
+                      <td>安全补丁</td>
+                      <td><span class="badge badge-major">中危</span></td>
+                      <td>发现3个CVE高危漏洞未修复</td>
+                      <td>执行 yum update 升级系统补丁</td>
+                    </tr>
+                  </tbody>
+                </table>
+
+                <div class="section-title" style="margin-top: 24px;">3. 开放端口列表</div>
+                <table class="report-table">
+                  <thead>
+                    <tr class="second_title">
+                      <th width="20%">端口</th>
+                      <th width="15%">协议</th>
+                      <th width="25%">服务</th>
+                      <th width="40%">状态</th>
+                    </tr>
+                  </thead>
+                  <tbody id="detailPortTable">
+                    <tr class="even">
+                      <td>22</td>
+                      <td>TCP</td>
+                      <td>ssh</td>
+                      <td>open (建议限制)</td>
+                    </tr>
+                    <tr class="odd">
+                      <td>80</td>
+                      <td>TCP</td>
+                      <td>http</td>
+                      <td>open</td>
+                    </tr>
+                    <tr class="even">
+                      <td>3306</td>
+                      <td>TCP</td>
+                      <td>mysql</td>
+                      <td>open (建议限制)</td>
+                    </tr>
+                    <tr class="odd">
+                      <td>443</td>
+                      <td>TCP</td>
+                      <td>https</td>
+                      <td>open</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Add/Edit Modal -->
+  <div class="modal-overlay" id="itemModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modalTitle">新增检查项</h3>
+        <button class="modal-close" onclick="closeModal()">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">检查项名称</label>
+          <input type="text" class="form-input" id="itemName" placeholder="请输入检查项名称">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">类别</label>
+            <select class="form-input" id="itemCategory">
+              <option value="high_risk_ports">高危端口</option>
+              <option value="high_risk_vulns">高危漏洞</option>
+              <option value="account_security">账号安全</option>
+              <option value="password_security">口令安全</option>
+              <option value="access_control">访问控制</option>
+              <option value="auth_encryption">认证加密</option>
+              <option value="supply_chain">供应链</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">严重级别</label>
+            <select class="form-input" id="itemSeverity">
+              <option value="critical">严重 (critical)</option>
+              <option value="major">重要 (major)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">检查类型</label>
+            <select class="form-input" id="itemType">
+              <option value="auto">自动化 (auto)</option>
+              <option value="semi_auto">半自动 (semi_auto)</option>
+              <option value="manual">人工 (manual)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">零容忍规则</label>
+            <select class="form-input" id="itemZeroTolerance">
+              <option value="false">否</option>
+              <option value="true">是</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">描述</label>
+          <input type="text" class="form-input" id="itemDescription" placeholder="请输入检查项描述">
+        </div>
+        <div class="form-group">
+          <label class="form-label">执行器类名</label>
+          <input type="text" class="form-input" id="itemExecutor" placeholder="如: com.security.check.PortCheckExecutor" style="font-family: 'JetBrains Mono', monospace;">
+          <div style="font-size: 12px; color: var(--text-muted); margin-top: 6px;">
+            填写执行器完整类名，用于调用相应的检查插件
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="header-btn" onclick="closeModal()">取消</button>
+        <button class="header-btn primary" onclick="saveItem()">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Template Modal -->
+  <div class="modal-overlay" id="templateModal">
+    <div class="modal" style="max-width: 700px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="templateModalTitle">新增模板</h3>
+        <button class="modal-close" onclick="closeTemplateModal()">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">模板名称</label>
+          <input type="text" class="form-input" id="templateName" placeholder="请输入模板名称">
+        </div>
+        <div class="form-group">
+          <label class="form-label">描述</label>
+          <input type="text" class="form-input" id="templateDescription" placeholder="请输入模板描述">
+        </div>
+        <div class="form-group">
+          <label class="form-label">选择检查项</label>
+          <div style="max-height: 300px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px; padding: 12px;" id="templateCheckItemList">
+            <!-- Populated by JS -->
+          </div>
+          <div style="margin-top: 8px; font-size: 12px; color: var(--text-muted);">
+            已选择 <span id="selectedCheckItemCount">0</span> 项检查项
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="header-btn" onclick="closeTemplateModal()">取消</button>
+        <button class="header-btn primary" onclick="saveTemplate()">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script>
+    // Data
+    const devices = [
+      { ip: '10.243.127.4', hostname: 'srv-core-01', os: 'linux', agentStatus: '在线', department: '算网室' },
+      { ip: '10.243.127.5', hostname: 'srv-db-01', os: 'linux', agentStatus: '在线', department: '算网室' },
+      { ip: '10.243.127.6', hostname: 'srv-web-01', os: 'linux', agentStatus: '在线', department: '开发室' },
+      { ip: '10.243.127.7', hostname: 'srv-api-01', os: 'linux', agentStatus: '在线', department: '开发室' },
+      { ip: '10.243.127.8', hostname: 'srv-cache-01', os: 'linux', agentStatus: '离线', department: '算网室' },
+      { ip: '10.243.127.9', hostname: 'srv-storage-01', os: 'linux', agentStatus: '在线', department: '算网室' },
+      { ip: '10.243.127.10', hostname: 'srv-log-01', os: 'linux', agentStatus: '在线', department: '算网室' },
+      { ip: '10.243.127.11', hostname: 'srv-monitor-01', os: 'linux', agentStatus: '在线', department: '运维室' },
+      { ip: '10.243.127.12', hostname: 'srv-backup-01', os: 'linux', agentStatus: '在线', department: '运维室' },
+      { ip: '10.243.127.13', hostname: 'srv-bastion-01', os: 'linux', agentStatus: '在线', department: '安全室' }
+    ];
+
+    const categories = [
+      { id: 'high_risk_ports', name: '高危端口', count: 3 },
+      { id: 'high_risk_vulns', name: '高危漏洞', count: 2 },
+      { id: 'account_security', name: '账号安全', count: 3 },
+      { id: 'password_security', name: '口令安全', count: 4 },
+      { id: 'access_control', name: '访问控制', count: 8 },
+      { id: 'auth_encryption', name: '认证加密', count: 3 },
+      { id: 'supply_chain', name: '供应链', count: 5 }
+    ];
+
+    // 检查项定义 - 必须在 templates 之前定义
+    let checkItems = [
+      { id: 1, name: '必要服务和端口检查', category: 'high_risk_ports', severity: 'critical', type: 'auto', zeroTolerance: true, enabled: true, executor: 'com.security.check.PortCheckExecutor' },
+      { id: 2, name: '高危端口访问限制', category: 'high_risk_ports', severity: 'critical', type: 'auto', zeroTolerance: true, enabled: true, executor: 'com.security.check.FirewallRuleCheckExecutor' },
+      { id: 3, name: '禁用不必要硬件接口', category: 'high_risk_ports', severity: 'major', type: 'auto', zeroTolerance: false, enabled: true, executor: 'com.security.check.UsbDisabledCheckExecutor' },
+      { id: 4, name: '已知高危漏洞扫描', category: 'high_risk_vulns', severity: 'critical', type: 'auto', zeroTolerance: true, enabled: true, executor: 'com.security.check.CveScanExecutor' },
+      { id: 5, name: '漏洞修复记录检查', category: 'high_risk_vulns', severity: 'major', type: 'auto', zeroTolerance: false, enabled: true, executor: 'com.security.check.PatchHistoryExecutor' },
+      { id: 6, name: '未纳入统一管理的账号', category: 'account_security', severity: 'critical', type: 'auto', zeroTolerance: true, enabled: true, executor: 'com.security.check.UnmanagedAccountExecutor' },
+      { id: 7, name: '长期未登录账号', category: 'account_security', severity: 'major', type: 'auto', zeroTolerance: false, enabled: true, executor: 'com.security.check.InactiveAccountExecutor' },
+      { id: 8, name: '建设工程遗留账号和出厂默认口令', category: 'account_security', severity: 'critical', type: 'auto', zeroTolerance: true, enabled: true, executor: 'com.security.check.LegacyAccountExecutor' },
+      { id: 9, name: '弱口令检查', category: 'password_security', severity: 'critical', type: 'auto', zeroTolerance: true, enabled: true, executor: 'com.security.check.WeakPasswordExecutor' },
+      { id: 10, name: '口令更换周期', category: 'password_security', severity: 'critical', type: 'auto', zeroTolerance: true, enabled: true, executor: 'com.security.check.PasswordExpiryExecutor' },
+      { id: 11, name: '失败尝试锁定策略', category: 'password_security', severity: 'major', type: 'auto', zeroTolerance: false, enabled: true, executor: 'com.security.check.AccountLockoutExecutor' },
+      { id: 12, name: '明文口令检查', category: 'password_security', severity: 'critical', type: 'auto', zeroTolerance: true, enabled: true, executor: 'com.security.check.PlaintextPasswordExecutor' },
+      { id: 13, name: '不安全管理协议', category: 'access_control', severity: 'critical', type: 'auto', zeroTolerance: true, enabled: true, executor: 'com.security.check.InsecureProtocolExecutor' },
+      { id: 14, name: '最小化ACL白名单', category: 'access_control', severity: 'critical', type: 'auto', zeroTolerance: true, enabled: true, executor: 'com.security.check.AclConfigExecutor' },
+      { id: 15, name: '横向跳转登录限制', category: 'access_control', severity: 'major', type: 'auto', zeroTolerance: false, enabled: true, executor: 'com.security.check.LateralMovementExecutor' },
+      { id: 16, name: '运维终端防护措施', category: 'access_control', severity: 'major', type: 'manual', zeroTolerance: false, enabled: true, executor: '' },
+      { id: 17, name: '辅助系统逻辑隔离', category: 'access_control', severity: 'major', type: 'semi_auto', zeroTolerance: false, enabled: true, executor: 'com.security.check.NetworkIsolationExecutor' },
+      { id: 18, name: '运维终端清单', category: 'access_control', severity: 'major', type: 'manual', zeroTolerance: false, enabled: true, executor: '' },
+      { id: 19, name: 'Console口远程运维管控', category: 'access_control', severity: 'major', type: 'semi_auto', zeroTolerance: false, enabled: true, executor: 'com.security.check.ConsoleAccessExecutor' },
+      { id: 20, name: '手机终端访问管理端口', category: 'access_control', severity: 'critical', type: 'auto', zeroTolerance: true, enabled: true, executor: 'com.security.check.MobileAccessExecutor' },
+      { id: 21, name: '不安全加密算法', category: 'auth_encryption', severity: 'major', type: 'auto', zeroTolerance: false, enabled: true, executor: 'com.security.check.WeakCipherExecutor' },
+      { id: 22, name: '路由控制协议认证', category: 'auth_encryption', severity: 'major', type: 'auto', zeroTolerance: false, enabled: true, executor: 'com.security.check.RoutingAuthExecutor' },
+      { id: 23, name: 'Web管理SSL/TLS', category: 'auth_encryption', severity: 'major', type: 'auto', zeroTolerance: false, enabled: true, executor: 'com.security.check.SslTlsConfigExecutor' },
+      { id: 24, name: '第三方运维审计', category: 'supply_chain', severity: 'major', type: 'semi_auto', zeroTolerance: false, enabled: true, executor: 'com.security.check.ThirdPartyAuditExecutor' },
+      { id: 25, name: '专线公网隔离', category: 'supply_chain', severity: 'major', type: 'semi_auto', zeroTolerance: false, enabled: true, executor: 'com.security.check.DedicatedLineIsolationExecutor' },
+      { id: 26, name: '机房进出管理', category: 'supply_chain', severity: 'major', type: 'manual', zeroTolerance: false, enabled: true, executor: '' },
+      { id: 27, name: '跨境维护和第三方代维检查', category: 'supply_chain', severity: 'critical', type: 'semi_auto', zeroTolerance: false, enabled: true, executor: 'com.security.check.CrossBorderMaintenanceExecutor' },
+      { id: 28, name: '专线备案', category: 'supply_chain', severity: 'major', type: 'manual', zeroTolerance: false, enabled: true, executor: '' }
+    ];
+
+    // 巡检模板 - 包含 checkItemIds 数组表示该模板包含哪些检查项
+    let templates = [
+      {
+        id: 'full',
+        name: '全量巡检',
+        description: '覆盖全部28项检查',
+        checkCount: 28,
+        checkItemIds: checkItems.map(c => c.id)  // 所有检查项
+      },
+      {
+        id: 'zero_tolerance',
+        name: '零容忍专项',
+        description: '12项零容忍红线',
+        checkCount: 12,
+        checkItemIds: checkItems.filter(c => c.zeroTolerance).map(c => c.id)  // 仅零容忍
+      }
+    ];
+
+    let selectedTemplate = null;
+    let editingTemplateId = null;
+
+    // Inspection Tasks - stores each inspection run result
+    let inspectionTasks = [
+      { 
+        id: 1, 
+        name: '2026年4月全量巡检', 
+        date: '2026-04-15 10:00', 
+        endDate: '2026-04-15 10:45',
+        template: '全量巡检 (28项)',
+        devices: ['10.243.127.4', '10.243.127.5', '10.243.127.6', '10.243.127.7', '10.243.127.8', '10.243.127.9', '10.243.127.10', '10.243.127.11', '10.243.127.12', '10.243.127.13'],
+        status: 'success',
+        totalChecks: 28,
+        passed: 25,
+        issues: { high: 2, medium: 5, low: 6 },
+        passRate: '89.3%'
+      },
+      { 
+        id: 2, 
+        name: '2026年4月零容忍专项', 
+        date: '2026-04-10 14:30', 
+        endDate: '2026-04-10 15:00',
+        template: '零容忍检查 (12项)',
+        devices: ['10.243.127.4', '10.243.127.5', '10.243.127.6'],
+        status: 'warning',
+        totalChecks: 12,
+        passed: 9,
+        issues: { high: 1, medium: 2, low: 0 },
+        passRate: '75.0%'
+      },
+      { 
+        id: 3, 
+        name: '2026年4月端口安全', 
+        date: '2026-04-05 09:15', 
+        endDate: '2026-04-05 09:30',
+        template: '高危端口检查 (3项)',
+        devices: ['10.243.127.7', '10.243.127.8'],
+        status: 'success',
+        totalChecks: 3,
+        passed: 3,
+        issues: { high: 0, medium: 0, low: 0 },
+        passRate: '100%'
+      },
+      { 
+        id: 4, 
+        name: '2026年3月全量巡检', 
+        date: '2026-03-28 10:00', 
+        endDate: '2026-03-28 10:50',
+        template: '全量巡检 (28项)',
+        devices: ['10.243.127.4', '10.243.127.5', '10.243.127.6', '10.243.127.7'],
+        status: 'error',
+        totalChecks: 28,
+        passed: 20,
+        issues: { high: 2, medium: 4, low: 2 },
+        passRate: '71.4%'
+      }
+    ];
+    
+    let currentTaskId = 1; // Currently selected task
+    let currentTaskPage = 1;
+    const tasksPerPage = 5;
+    
+    let currentCheckItemsPage = 1;
+    const checkItemsPerPage = 10;
+    let filteredCheckItems = [];
+    
+    // Host detail data per task
+    const hostDetails = {
+      1: { // Task 1 hosts
+        '10.243.127.4': { hostname: 'srv-core-01', score: 85, risk: 'low', status: 'pass', agentStatus: '在线', checks: 28, passed: 24, issues: { high: 0, medium: 2, low: 2 } },
+        '10.243.127.5': { hostname: 'srv-db-01', score: 72, risk: 'medium', status: 'medium', agentStatus: '在线', checks: 28, passed: 20, issues: { high: 0, medium: 5, low: 3 } },
+        '10.243.127.6': { hostname: 'srv-web-01', score: 90, risk: 'low', status: 'pass', agentStatus: '在线', checks: 28, passed: 26, issues: { high: 0, medium: 1, low: 1 } },
+        '10.243.127.7': { hostname: 'srv-api-01', score: 45, risk: 'high', status: 'high', agentStatus: '在线', checks: 28, passed: 18, issues: { high: 2, medium: 5, low: 3 } }
+      }
+    };
+
+    const reports = [
+      { id: 1, name: '2026-04-14 全量巡检', date: '2026-04-14 14:30', status: 'error', issues: 8, passed: 20 },
+      { id: 2, name: '2026-04-10 零容忍专项', date: '2026-04-10 10:15', status: 'warning', issues: 3, passed: 9 },
+      { id: 3, name: '2026-04-05 端口安全检查', date: '2026-04-05 09:00', status: 'success', issues: 0, passed: 3 },
+      { id: 4, name: '2026-03-28 账号安全检查', date: '2026-03-28 15:20', status: 'warning', issues: 2, passed: 6 }
+    ];
+
+    const categoryNames = {
+      high_risk_ports: '高危端口',
+      high_risk_vulns: '高危漏洞',
+      account_security: '账号安全',
+      password_security: '口令安全',
+      access_control: '访问控制',
+      auth_encryption: '认证加密',
+      supply_chain: '供应链'
+    };
+
+    // Navigation
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const page = item.dataset.page;
+        switchPage(page);
+      });
+    });
+
+    function switchPage(pageId) {
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.querySelector(`[data-page="${pageId}"]`).classList.add('active');
+      
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById(`page-${pageId}`).classList.add('active');
+      
+      const titles = {
+        config: '巡检项配置',
+        execute: '巡检任务执行',
+        report: '巡检报告'
+      };
+      document.getElementById('pageTitle').textContent = titles[pageId];
+      
+      // Reinitialize icons
+      lucide.createIcons();
+    }
+
+    // Render functions
+    function renderCheckItems() {
+      const tbody = document.getElementById('checkItemsTable');
+      
+      // Calculate pagination
+      const totalItems = filteredCheckItems.length;
+      const totalPages = Math.ceil(totalItems / checkItemsPerPage);
+      
+      // Ensure current page is valid
+      if (currentCheckItemsPage > totalPages) currentCheckItemsPage = totalPages || 1;
+      if (currentCheckItemsPage < 1) currentCheckItemsPage = 1;
+      
+      // Get items for current page
+      const startIndex = (currentCheckItemsPage - 1) * checkItemsPerPage;
+      const endIndex = startIndex + checkItemsPerPage;
+      const pageItems = filteredCheckItems.slice(startIndex, endIndex);
+      
+      tbody.innerHTML = pageItems.map(item => `
+        <tr>
+          <td style="font-family: 'JetBrains Mono';">${String(item.id).padStart(2, '0')}</td>
+          <td>${item.name}</td>
+          <td>${categoryNames[item.category]}</td>
+          <td><span class="badge badge-${item.severity}">${item.severity === 'critical' ? '严重' : '重要'}</span></td>
+          <td><span class="badge badge-${item.type === 'auto' ? 'auto' : item.type === 'semi_auto' ? 'semi' : 'manual'}">${item.type === 'auto' ? '自动' : item.type === 'semi_auto' ? '半自动' : '人工'}</span></td>
+          <td><span class="badge badge-${item.zeroTolerance ? 'yes' : 'no'}">${item.zeroTolerance ? '是' : '否'}</span></td>
+          <td style="font-family: 'JetBrains Mono'; font-size: 12px; color: var(--text-muted); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${item.executor}">${item.executor}</td>
+          <td>
+            <label class="toggle">
+              <input type="checkbox" ${item.enabled ? 'checked' : ''} onchange="toggleEnabled(${item.id})">
+              <span class="toggle-slider"></span>
+            </label>
+          </td>
+          <td>
+            <button class="action-btn" onclick="editItem(${item.id})" title="编辑">
+              <i data-lucide="edit-2" style="width:16px;height:16px;"></i>
+            </button>
+            <button class="action-btn danger" onclick="deleteItem(${item.id})" title="删除" style="margin-left: 8px;">
+              <i data-lucide="trash-2" style="width:16px;height:16px;"></i>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+      
+      // Update pagination
+      updateCheckItemsPagination(totalPages);
+      
+      lucide.createIcons();
+    }
+    
+    function updateCheckItemsPagination(totalPages) {
+      const prevBtn = document.getElementById('checkItemsPrevPage');
+      const nextBtn = document.getElementById('checkItemsNextPage');
+      const pager = document.getElementById('checkItemsPager');
+      
+      prevBtn.disabled = currentCheckItemsPage <= 1;
+      nextBtn.disabled = currentCheckItemsPage >= totalPages;
+      
+      // Update total count
+      document.getElementById('checkItemsTotalCount').textContent = filteredCheckItems.length;
+      
+      // Render pager
+      let pagerHtml = '';
+      const maxVisiblePages = 5;
+      let startPage = Math.max(1, currentCheckItemsPage - Math.floor(maxVisiblePages / 2));
+      let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+      
+      if (endPage - startPage + 1 < maxVisiblePages) {
+        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+      }
+      
+      for (let i = startPage; i <= endPage; i++) {
+        pagerHtml += `<li class="${i === currentCheckItemsPage ? 'is-active' : ''} number" onclick="goToCheckItemsPage(${i})">${i}</li>`;
+      }
+      
+      pager.innerHTML = pagerHtml;
+      
+      lucide.createIcons();
+    }
+    
+    // Change page size
+    function changeCheckItemsPageSize(size) {
+      checkItemsPerPage = parseInt(size);
+      currentCheckItemsPage = 1;
+      renderCheckItems();
+    }
+    
+    // Go to specific page
+    function goToCheckItemsPage(page) {
+      currentCheckItemsPage = page;
+      renderCheckItems();
+    }
+    
+    function prevCheckItemsPage() {
+      if (currentCheckItemsPage > 1) {
+        currentCheckItemsPage--;
+        renderCheckItems();
+      }
+    }
+    
+    function nextCheckItemsPage() {
+      const totalPages = Math.ceil(filteredCheckItems.length / checkItemsPerPage);
+      if (currentCheckItemsPage < totalPages) {
+        currentCheckItemsPage++;
+        renderCheckItems();
+      }
+    }
+
+    function renderDevices() {
+      const grid = document.getElementById('deviceGrid');
+      
+      // Only show selected devices
+      const selectedList = [...selectedDevices].map(i => devices[i]);
+      
+      if (selectedList.length === 0) {
+        grid.innerHTML = '<div class="empty-state" style="padding: 40px;"><i data-lucide="server"></i><p>请通过上方输入框添加设备</p></div>';
+        lucide.createIcons();
+        return;
+      }
+      
+      grid.innerHTML = `
+        <table class="data-table" style="margin-top: 0; table-layout: fixed;">
+          <thead>
+            <tr>
+              <th style="width: 140px;">IP</th>
+              <th>主机名</th>
+              <th style="width: 120px;">操作系统</th>
+              <th style="width: 80px;">Agent状态</th>
+              <th style="width: 80px;">操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${[...selectedDevices].map(i => {
+              const device = devices[i];
+              return `
+                <tr class="device-row" data-index="${i}">
+                  <td style="font-family: 'JetBrains Mono';">${device.ip}</td>
+                  <td>${device.hostname}</td>
+                  <td>${device.os}</td>
+                  <td><span class="badge ${device.agentStatus === '在线' ? 'badge-auto' : 'badge-critical'}">${device.agentStatus}</span></td>
+                  <td>
+                    <button class="action-btn danger" onclick="removeDevice(${i})" title="移除">
+                      <i data-lucide="x" style="width:16px;height:16px;"></i>
+                    </button>
+                  </td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      `;
+      lucide.createIcons();
+    }
+
+    function renderTemplates() {
+      const grid = document.getElementById('templateGrid');
+      grid.innerHTML = templates.map((tpl, index) => `
+        <div class="template-chip ${tpl.id === 'zero_tolerance' ? 'zero-tolerance' : ''}" data-index="${index}" onclick="selectTemplate(${index})">
+          <div class="template-icon">
+            <i data-lucide="${tpl.id === 'zero_tolerance' ? 'alert-octagon' : 'list-checks'}"></i>
+          </div>
+          <div class="template-info">
+            <div class="template-name">${tpl.name}</div>
+            <div class="template-desc">${tpl.description}</div>
+          </div>
+          <span class="check-count">${tpl.checkCount}项</span>
+        </div>
+      `).join('');
+      lucide.createIcons();
+    }
+
+    // Render template config page
+    function renderTemplateConfig() {
+      const grid = document.getElementById('templateConfigGrid');
+      grid.innerHTML = templates.map((tpl, index) => {
+        // Get check item names
+        const itemNames = tpl.checkItemIds.map(id => {
+          const item = checkItems.find(c => c.id === id);
+          return item ? item.name : '';
+        }).filter(name => name);
+
+        return `
+          <div class="template-config-card ${tpl.id === 'zero_tolerance' ? 'zero-tolerance' : ''}">
+            <div class="template-config-header">
+              <div class="template-config-icon">
+                <i data-lucide="${tpl.id === 'zero_tolerance' ? 'alert-octagon' : 'layout-template'}"></i>
+              </div>
+              <div class="template-config-info">
+                <div class="template-config-name">${tpl.name}</div>
+                <div class="template-config-desc">${tpl.description}</div>
+              </div>
+            </div>
+            <div class="template-config-count">
+              <div class="count-num">${tpl.checkCount}</div>
+              <div class="count-label">检查项</div>
+            </div>
+            <div class="template-config-body">
+              <div class="template-config-categories">
+                ${itemNames.slice(0, 5).map(name => `
+                  <span class="template-config-category" title="${name}">
+                    <i data-lucide="check"></i>
+                    ${name.length > 12 ? name.substring(0, 12) + '...' : name}
+                  </span>
+                `).join('')}
+                ${itemNames.length > 5 ? `<span class="template-config-category">+${itemNames.length - 5} more</span>` : ''}
+              </div>
+              <div class="template-config-actions">
+                <button class="header-btn" onclick="editTemplate('${tpl.id}')">
+                  <i data-lucide="edit-2" style="width:14px;height:14px;"></i>
+                  编辑
+                </button>
+                <button class="header-btn danger" onclick="deleteTemplate('${tpl.id}')">
+                  <i data-lucide="trash-2" style="width:14px;height:14px;"></i>
+                  删除
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+      lucide.createIcons();
+    }
+
+    function renderReports() {
+      const list = document.getElementById('reportList');
+      list.innerHTML = reports.map(report => `
+        <div class="report-item" onclick="viewReport(${report.id})">
+          <div class="report-icon ${report.status}">
+            <i data-lucide="${report.status === 'success' ? 'check-circle' : report.status === 'warning' ? 'alert-triangle' : 'x-circle'}"></i>
+          </div>
+          <div class="report-info">
+            <div class="report-name">${report.name}</div>
+            <div class="report-meta">${report.date} · ${report.passed}项通过 · ${report.issues}项异常</div>
+          </div>
+          <span class="report-status ${report.status}">
+            ${report.status === 'success' ? '全部通过' : report.status === 'warning' ? '存在警告' : '需要整改'}
+          </span>
+        </div>
+      `).join('');
+      lucide.createIcons();
+    }
+
+    // Device Selection
+    const selectedDevices = new Set();
+
+    function updateDeviceCount() {
+      document.getElementById('targetDeviceCount').textContent = selectedDevices.size;
+    }
+
+    function confirmIpInput() {
+      const value = document.getElementById('quickIpInput').value;
+      if (!value || !value.trim()) {
+        return;
+      }
+      
+      // Split by semicolon and trim
+      const ips = value.split(';').map(ip => ip.trim()).filter(ip => ip);
+      
+      // Match devices by IP and add to selection
+      ips.forEach(ip => {
+        const index = devices.findIndex(d => d.ip === ip);
+        if (index !== -1) {
+          selectedDevices.add(index);
+        }
+      });
+      
+      renderDevices();
+      updateDeviceCount();
+      document.getElementById('quickIpInput').value = '';
+      showToast('已添加 ' + ips.length + ' 台设备', 'success');
+    }
+
+    function handleQuickIpInput(value) {
+      // Just for potential future use - currently not used
+    }
+
+    function removeDevice(index) {
+      selectedDevices.delete(index);
+      renderDevices();
+      updateDeviceCount();
+    }
+
+    function selectTemplate(index) {
+      const chips = document.querySelectorAll('.template-chip');
+      chips.forEach(c => c.classList.remove('selected'));
+      chips[index].classList.add('selected');
+      selectedTemplate = templates[index];
+    }
+
+    function clearSelection() {
+      selectedDevices.clear();
+      selectedTemplate = null;
+      document.querySelectorAll('.template-chip').forEach(c => c.classList.remove('selected'));
+      renderDevices();
+      updateDeviceCount();
+      document.getElementById('quickIpInput').value = '';
+      document.getElementById('logOutput').style.display = 'none';
+      document.getElementById('progressSection').style.display = 'none';
+    }
+
+    // Check item name to severity mapping (generated from checkItems)
+    function getCheckItemSeverityMap() {
+      const map = {};
+      checkItems.forEach(item => {
+        map[item.name] = item.severity;
+      });
+      return map;
+    }
+    
+    // Determine issue level based on check severity and result
+    // Rule: 
+    // - critical check + fail → high
+    // - critical check + warning → medium  
+    // - major check + fail → medium
+    // - major check + warning → low
+    // - auto check + fail → depends on severity above
+    function getIssueLevel(checkSeverity, result) {
+      if (result === '通过') return null; // No issue
+      if (result === '失败') {
+        return checkSeverity === 'critical' ? 'high' : 'medium';
+      }
+      if (result === '警告') {
+        return checkSeverity === 'critical' ? 'medium' : 'low';
+      }
+      return null;
+    }
+
+    // Inspection Execution
+    function runInspection() {
+      if (selectedDevices.size === 0) {
+        showToast('请至少选择一个设备', 'warning');
+        return;
+      }
+      if (!selectedTemplate) {
+        showToast('请选择一个巡检模板', 'warning');
+        return;
+      }
+
+      const logOutput = document.getElementById('logOutput');
+      const progressSection = document.getElementById('progressSection');
+      logOutput.style.display = 'block';
+      progressSection.style.display = 'block';
+
+      // Get selected check items with their severity
+      const severityMap = getCheckItemSeverityMap();
+      const selectedCheckItems = [];
+
+      // Build list of check items based on selected template
+      const template = templates.find(t => t.id === selectedTemplate.id);
+      if (!template) return;
+
+      checkItems.forEach(item => {
+        // Check if this item is in the template's checkItemIds
+        if (template.checkItemIds && template.checkItemIds.includes(item.id)) {
+          selectedCheckItems.push({
+            id: item.id,
+            name: item.name,
+            severity: item.severity,
+            category: item.category,
+            zeroTolerance: item.zeroTolerance
+          });
+        }
+      });
+
+      let checked = 0;
+      const total = selectedDevices.size * selectedCheckItems.length;
+      
+      document.getElementById('checkedCount').textContent = '0';
+      document.getElementById('passedCount').textContent = '0';
+      document.getElementById('failedCount').textContent = '0';
+
+      const deviceIPs = [...selectedDevices].map(i => devices[i].ip);
+      let logHtml = '';
+      
+      // Store detailed results per device for report
+      const deviceResults = {};
+      deviceIPs.forEach(ip => {
+        deviceResults[ip] = {
+          passed: 0,
+          failed: 0,
+          warning: 0,
+          issues: { high: 0, medium: 0, low: 0 },
+          checks: []
+        };
+      });
+      
+      const interval = setInterval(() => {
+        const device = deviceIPs[Math.floor(Math.random() * deviceIPs.length)];
+        const checkItem = selectedCheckItems[Math.floor(Math.random() * selectedCheckItems.length)];
+        const statuses = ['通过', '通过', '通过', '通过', '警告', '失败'];
+        const status = statuses[Math.floor(Math.random() * statuses.length)];
+        
+        const time = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+        const logClass = status === '通过' ? 'log-success' : status === '警告' ? 'log-warning' : 'log-error';
+        
+        logHtml += `<div class="log-line"><span class="log-time">${time}</span><span class="${logClass}">[${status}] ${device} - ${checkItem.name}</span></div>`;
+        logOutput.innerHTML = logHtml;
+        logOutput.scrollTop = logOutput.scrollHeight;
+
+        checked++;
+        const progress = Math.round((checked / total) * 100);
+        document.getElementById('progressFill').style.width = progress + '%';
+        document.getElementById('progressText').textContent = progress + '%';
+        document.getElementById('checkedCount').textContent = checked;
+
+        // Update device result
+        const issueLevel = getIssueLevel(checkItem.severity, status);
+        
+        if (status === '通过') {
+          document.getElementById('passedCount').textContent = parseInt(document.getElementById('passedCount').textContent) + 1;
+          deviceResults[device].passed++;
+        } else if (status === '警告') {
+          document.getElementById('passedCount').textContent = parseInt(document.getElementById('passedCount').textContent) + 1;
+          deviceResults[device].warning++;
+          if (issueLevel) deviceResults[device].issues[issueLevel]++;
+        } else if (status === '失败') {
+          document.getElementById('failedCount').textContent = parseInt(document.getElementById('failedCount').textContent) + 1;
+          deviceResults[device].failed++;
+          if (issueLevel) deviceResults[device].issues[issueLevel]++;
+        }
+        
+        // Record check result
+        deviceResults[device].checks.push({
+          name: checkItem.name,
+          severity: checkItem.severity,
+          status: status,
+          issueLevel: issueLevel
+        });
+
+        if (checked >= total) {
+          clearInterval(interval);
+          
+          // Create new task record with real severity-based issue counting
+          const passedCount = parseInt(document.getElementById('passedCount').textContent);
+          const failedCount = parseInt(document.getElementById('failedCount').textContent);
+          const now = new Date();
+          const dateStr = now.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '-');
+          const timeStr = now.toLocaleTimeString('zh-CN', { hour12: false });
+
+          const templateName = selectedTemplate ? selectedTemplate.name : '';
+          
+          // Calculate aggregate issues across all devices
+          let totalHigh = 0, totalMedium = 0, totalLow = 0;
+          Object.values(deviceResults).forEach(result => {
+            totalHigh += result.issues.high;
+            totalMedium += result.issues.medium;
+            totalLow += result.issues.low;
+          });
+          
+          // Calculate pass rate
+          const totalChecks = total;
+          const passRate = totalChecks > 0 ? Math.round((passedCount / totalChecks) * 100) + '%' : '0%';
+          
+          // Determine status based on results
+          let taskStatus = 'success';
+          if (totalHigh > 0) taskStatus = 'error';
+          else if (totalMedium > 0 || totalLow > 0) taskStatus = 'warning';
+          
+          // Create task record
+          const newTask = {
+            id: Date.now(),
+            name: `${dateStr} 巡检任务`,
+            date: `${dateStr} ${timeStr}`,
+            endDate: '',
+            template: templateName + ' (' + totalChecks + '项)',
+            templateId: selectedTemplate.id,  // Store template ID for reference
+            devices: deviceIPs,
+            status: taskStatus,
+            totalChecks: totalChecks,
+            passed: passedCount,
+            issues: { high: totalHigh, medium: totalMedium, low: totalLow },
+            passRate: passRate,
+            deviceResults: deviceResults  // Store detailed results per device
+          };
+          
+          // Add to beginning of task list
+          inspectionTasks.unshift(newTask);
+          
+          // Select the new task
+          currentTaskId = newTask.id;
+          
+          // Reset to first page when new task is added
+          currentTaskPage = 1;
+          
+          // Re-render task list and report
+          renderTaskList();
+          renderReportSummary(newTask);
+          
+          showToast('巡检执行完成，任务已添加到报告列表', 'success');
+        }
+      }, 300);
+    }
+
+    // Filter
+    function filterTable() {
+      const search = document.getElementById('searchInput').value.toLowerCase();
+      const category = document.getElementById('categoryFilter').value;
+      const type = document.getElementById('typeFilter').value;
+      const zeroTolerance = document.getElementById('zeroToleranceFilter').value;
+
+      // Update filtered items
+      filteredCheckItems = checkItems.filter(item => {
+        const matchSearch = item.name.toLowerCase().includes(search);
+        const matchCategory = !category || item.category === category;
+        const matchType = !type || item.type === type;
+        const matchZeroTolerance = !zeroTolerance || String(item.zeroTolerance) === zeroTolerance;
+        return matchSearch && matchCategory && matchType && matchZeroTolerance;
+      });
+      
+      // Reset to first page when filter changes
+      currentCheckItemsPage = 1;
+      
+      // Re-render
+      renderCheckItems();
+    }
+
+    // Modal functions
+    function openAddModal() {
+      document.getElementById('modalTitle').textContent = '新增检查项';
+      document.getElementById('itemName').value = '';
+      document.getElementById('itemDescription').value = '';
+      document.getElementById('itemModal').classList.add('active');
+    }
+
+    function editItem(id) {
+      const item = checkItems.find(i => i.id === id);
+      if (!item) return;
+      
+      document.getElementById('modalTitle').textContent = '编辑检查项';
+      document.getElementById('itemName').value = item.name;
+      document.getElementById('itemCategory').value = item.category;
+      document.getElementById('itemSeverity').value = item.severity;
+      document.getElementById('itemType').value = item.type;
+      document.getElementById('itemZeroTolerance').value = String(item.zeroTolerance);
+      document.getElementById('itemDescription').value = '';
+      document.getElementById('itemExecutor').value = item.executor || '';
+      document.getElementById('itemModal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('itemModal').classList.remove('active');
+    }
+
+    // Template Modal functions
+    function openTemplateModal() {
+      editingTemplateId = null;
+      document.getElementById('templateModalTitle').textContent = '新增模板';
+      document.getElementById('templateName').value = '';
+      document.getElementById('templateDescription').value = '';
+      renderCheckItemSelector([]);
+      document.getElementById('templateModal').classList.add('active');
+    }
+
+    function editTemplate(templateId) {
+      const tpl = templates.find(t => t.id === templateId);
+      if (!tpl) return;
+
+      editingTemplateId = templateId;
+      document.getElementById('templateModalTitle').textContent = '编辑模板';
+      document.getElementById('templateName').value = tpl.name;
+      document.getElementById('templateDescription').value = tpl.description;
+      renderCheckItemSelector(tpl.checkItemIds || []);
+      document.getElementById('templateModal').classList.add('active');
+    }
+
+    function closeTemplateModal() {
+      document.getElementById('templateModal').classList.remove('active');
+      editingTemplateId = null;
+    }
+
+    // Render check item selector with category grouping
+    function renderCheckItemSelector(selectedIds) {
+      const container = document.getElementById('templateCheckItemList');
+      const categoryNames = {
+        high_risk_ports: '高危端口',
+        high_risk_vulns: '高危漏洞',
+        account_security: '账号安全',
+        password_security: '口令安全',
+        access_control: '访问控制',
+        auth_encryption: '认证加密',
+        supply_chain: '供应链'
+      };
+
+      // Group check items by category
+      const groupedItems = {};
+      checkItems.forEach(item => {
+        if (!groupedItems[item.category]) {
+          groupedItems[item.category] = [];
+        }
+        groupedItems[item.category].push(item);
+      });
+
+      let html = '';
+      for (const [catId, items] of Object.entries(groupedItems)) {
+        html += `
+          <div style="margin-bottom: 12px;">
+            <div style="font-weight: 500; font-size: 13px; color: var(--text-secondary); margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+              <span>${categoryNames[catId] || catId}</span>
+              <label style="display: flex; align-items: center; gap: 4px; cursor: pointer; font-size: 12px; color: var(--accent-primary);">
+                <input type="checkbox" onchange="toggleAllInCategory('${catId}', this.checked)" ${items.every(i => selectedIds.includes(i.id)) ? 'checked' : ''}>
+                全选
+              </label>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+              ${items.map(item => `
+                <label class="check-item-chip ${selectedIds.includes(item.id) ? 'selected' : ''}" data-item-id="${item.id}" data-category="${catId}">
+                  <input type="checkbox" value="${item.id}" ${selectedIds.includes(item.id) ? 'checked' : ''} onchange="toggleCheckItem(this)" style="display: none;">
+                  <i data-lucide="check" style="width: 14px; height: 14px;"></i>
+                  <span>${item.id}. ${item.name}</span>
+                  ${item.zeroTolerance ? '<span style="color: var(--accent-red); font-size: 10px;">零容忍</span>' : ''}
+                </label>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      container.innerHTML = html;
+      updateSelectedCheckItemCount(selectedIds.length);
+      lucide.createIcons();
+    }
+
+    function toggleCheckItem(checkbox) {
+      const label = checkbox.parentElement;
+      if (checkbox.checked) {
+        label.classList.add('selected');
+      } else {
+        label.classList.remove('selected');
+      }
+      // Update count
+      const checkedCount = document.querySelectorAll('#templateCheckItemList input:checked').length;
+      updateSelectedCheckItemCount(checkedCount);
+    }
+
+    function toggleAllInCategory(catId, checked) {
+      const labels = document.querySelectorAll(`#templateCheckItemList .check-item-chip[data-category="${catId}"]`);
+      labels.forEach(label => {
+        const checkbox = label.querySelector('input[type="checkbox"]');
+        checkbox.checked = checked;
+        if (checked) {
+          label.classList.add('selected');
+        } else {
+          label.classList.remove('selected');
+        }
+      });
+      const checkedCount = document.querySelectorAll('#templateCheckItemList input:checked').length;
+      updateSelectedCheckItemCount(checkedCount);
+    }
+
+    function updateSelectedCheckItemCount(count) {
+      document.getElementById('selectedCheckItemCount').textContent = count;
+    }
+
+    function saveTemplate() {
+      const name = document.getElementById('templateName').value.trim();
+      const description = document.getElementById('templateDescription').value.trim();
+      const selectedIds = [...document.querySelectorAll('#templateCheckItemList input:checked')].map(cb => parseInt(cb.value));
+
+      if (!name) {
+        showToast('请输入模板名称', 'warning');
+        return;
+      }
+      if (selectedIds.length === 0) {
+        showToast('请至少选择一项检查项', 'warning');
+        return;
+      }
+
+      if (editingTemplateId) {
+        // Update existing template
+        const index = templates.findIndex(t => t.id === editingTemplateId);
+        if (index !== -1) {
+          templates[index] = {
+            ...templates[index],
+            name,
+            description,
+            checkItemIds: selectedIds,
+            checkCount: selectedIds.length
+          };
+        }
+      } else {
+        // Create new template
+        templates.push({
+          id: 'custom_' + Date.now(),
+          name,
+          description,
+          checkItemIds: selectedIds,
+          checkCount: selectedIds.length
+        });
+      }
+
+      closeTemplateModal();
+      renderTemplateConfig();
+      renderTemplates();  // Update execution page too
+      showToast(editingTemplateId ? '模板已更新' : '模板已创建', 'success');
+    }
+
+    function deleteTemplate(templateId) {
+      const tpl = templates.find(t => t.id === templateId);
+      if (!tpl) return;
+
+      // Check if template is used in any inspection task
+      const isUsed = inspectionTasks.some(task => task.templateId === templateId);
+      if (isUsed) {
+        showToast('该模板已被巡检任务引用，无法删除', 'error');
+        return;
+      }
+
+      if (confirm(`确定要删除模板"${tpl.name}"吗？`)) {
+        templates = templates.filter(t => t.id !== templateId);
+        renderTemplateConfig();
+        renderTemplates();
+        showToast('模板已删除', 'success');
+      }
+    }
+
+    function saveItem() {
+      const name = document.getElementById('itemName').value;
+      if (!name) {
+        showToast('请输入检查项名称', 'warning');
+        return;
+      }
+      showToast('保存成功', 'success');
+      closeModal();
+    }
+
+    function showHostDetail(ip) {
+      showHostDetailFromTask(currentTaskId, ip);
+    }
+
+    function showReportSummary() {
+      document.getElementById('reportSummary').style.display = 'block';
+      document.getElementById('reportDetail').style.display = 'none';
+    }
+
+    function exportReport() {
+      showToast('报告导出功能开发中...', 'success');
+    }
+    
+    // Export current selected task report
+    function exportCurrentReport() {
+      const task = inspectionTasks.find(t => t.id === currentTaskId);
+      if (!task) {
+        showToast('请先选择一个巡检任务', 'warning');
+        return;
+      }
+      
+      // Build report content
+      const reportContent = buildReportContent(task);
+      
+      // Create and download file
+      const blob = new Blob([reportContent], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `巡检报告_${task.name}_${new Date().toLocaleDateString('zh-CN').replace(/\//g, '-')}.txt`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      showToast('报告导出成功', 'success');
+    }
+    
+    // Build report content for a task
+    function buildReportContent(task) {
+      let content = '';
+      content += '='.repeat(60) + '\n';
+      content += '网络安全合规巡检报告\n';
+      content += '='.repeat(60) + '\n\n';
+      
+      // Task overview
+      content += '【巡检总览】\n';
+      content += '-'.repeat(40) + '\n';
+      content += `巡检任务: ${task.name}\n`;
+      content += `巡检时间: ${task.date}\n`;
+      content += `巡检模板: ${task.template}\n`;
+      content += `巡检主机数: ${task.devices.length}台\n`;
+      content += `通过率: ${task.passRate}\n`;
+      content += `高危问题: ${task.issues.high}项\n`;
+      content += `中危问题: ${task.issues.medium}项\n`;
+      content += `低危问题: ${task.issues.low}项\n\n`;
+      
+      // Host results
+      content += '【主机巡检结果】\n';
+      content += '-'.repeat(40) + '\n';
+      content += 'IP地址          主机名          安全评分  结果\n';
+      content += '-'.repeat(40) + '\n';
+      
+      task.devices.forEach(ip => {
+        const detail = getHostDetailForTask(task.id, ip);
+        const hostname = detail ? detail.hostname : '-';
+        const score = detail ? detail.score + '分' : '-';
+        const status = detail ? (detail.status === 'high' ? '高危' : detail.status === 'medium' ? '中危' : '通过') : '-';
+        content += `${ip.padEnd(16)}${hostname.padEnd(14)}${score.padEnd(10)}${status}\n`;
+      });
+      
+      content += '\n';
+      content += '='.repeat(60) + '\n';
+      content += `报告生成时间: ${new Date().toLocaleString('zh-CN')}\n`;
+      
+      return content;
+    }
+
+    function deleteItem(id) {
+      if (confirm('确定要删除该检查项吗？')) {
+        showToast('删除成功', 'success');
+      }
+    }
+
+    function toggleEnabled(id) {
+      // Toggle functionality
+    }
+
+    function viewReport(id) {
+      showToast('查看报告详情', 'success');
+    }
+
+    // Toast
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.innerHTML = `
+        <i data-lucide="${type === 'success' ? 'check-circle' : type === 'error' ? 'x-circle' : 'alert-triangle'}" class="toast-icon"></i>
+        <span>${message}</span>
+      `;
+      container.appendChild(toast);
+      lucide.createIcons();
+      
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      // Initialize filtered check items with all items
+      filteredCheckItems = [...checkItems];
+      renderCheckItems();
+      renderDevices();
+      renderTemplates();
+      renderTemplateConfig();
+      renderTaskList();
+      renderReportSummary(inspectionTasks[0]);
+    });
+
+    // Render Task List
+    function renderTaskList() {
+      const list = document.getElementById('taskList');
+      
+      // Calculate pagination
+      const totalTasks = inspectionTasks.length;
+      const totalPages = Math.ceil(totalTasks / tasksPerPage);
+      
+      // Ensure current page is valid
+      if (currentTaskPage > totalPages) currentTaskPage = totalPages || 1;
+      if (currentTaskPage < 1) currentTaskPage = 1;
+      
+      // Get tasks for current page
+      const startIndex = (currentTaskPage - 1) * tasksPerPage;
+      const endIndex = startIndex + tasksPerPage;
+      const pageTasks = inspectionTasks.slice(startIndex, endIndex);
+      
+      list.innerHTML = pageTasks.map(task => `
+        <div class="task-item ${task.id === currentTaskId ? 'active' : ''}" onclick="selectTask(${task.id}, event)">
+          <div class="task-info">
+            <div class="task-name">${task.name}</div>
+            <div class="task-time">${task.date}</div>
+          </div>
+          <div class="task-status ${task.status}">
+            ${getTaskStatusText(task)}
+          </div>
+        </div>
+      `).join('');
+      
+      // Update total count
+      document.getElementById('taskTotalCount').textContent = totalTasks;
+      
+      // Update pagination controls
+      updateTaskPagination(totalPages);
+      
+      lucide.createIcons();
+    }
+    
+    // Update pagination UI
+    function updateTaskPagination(totalPages) {
+      const prevBtn = document.getElementById('prevPage');
+      const nextBtn = document.getElementById('nextPage');
+      const pager = document.getElementById('taskPager');
+      
+      prevBtn.disabled = currentTaskPage <= 1;
+      nextBtn.disabled = currentTaskPage >= totalPages;
+      
+      // Render pager
+      let pagerHtml = '';
+      const maxVisiblePages = 5;
+      let startPage = Math.max(1, currentTaskPage - Math.floor(maxVisiblePages / 2));
+      let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+      
+      if (endPage - startPage + 1 < maxVisiblePages) {
+        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+      }
+      
+      for (let i = startPage; i <= endPage; i++) {
+        pagerHtml += `<li class="${i === currentTaskPage ? 'is-active' : ''} number" onclick="goToTaskPage(${i})">${i}</li>`;
+      }
+      
+      pager.innerHTML = pagerHtml;
+      
+      lucide.createIcons();
+    }
+    
+    // Change page size
+    function changeTaskPageSize(size) {
+      tasksPerPage = parseInt(size);
+      currentTaskPage = 1;
+      renderTaskList();
+    }
+    
+    // Go to specific page
+    function goToTaskPage(page) {
+      currentTaskPage = page;
+      renderTaskList();
+    }
+    
+    // Previous page
+    function prevTaskPage() {
+      if (currentTaskPage > 1) {
+        currentTaskPage--;
+        renderTaskList();
+      }
+    }
+    
+    // Next page
+    function nextTaskPage() {
+      const totalPages = Math.ceil(inspectionTasks.length / tasksPerPage);
+      if (currentTaskPage < totalPages) {
+        currentTaskPage++;
+        renderTaskList();
+      }
+    }
+
+    // Get status text for task
+    function getTaskStatusText(task) {
+      if (task.status === 'success') {
+        return '通过';
+      } else if (task.status === 'warning') {
+        return (task.issues.high + task.issues.medium) + '项异常';
+      } else {
+        return task.issues.high + '项高危';
+      }
+    }
+
+    // Select task and show its report
+    function selectTask(taskId, event) {
+      currentTaskId = taskId;
+      const task = inspectionTasks.find(t => t.id === taskId);
+      if (!task) return;
+      
+      // Update active state in task list
+      document.querySelectorAll('.task-item').forEach(item => item.classList.remove('active'));
+      
+      // Find and activate the clicked task item
+      const taskItems = document.querySelectorAll('.task-item');
+      const taskIndex = inspectionTasks.findIndex(t => t.id === taskId);
+      const pageStartIndex = (currentTaskPage - 1) * tasksPerPage;
+      const indexOnPage = taskIndex - pageStartIndex;
+      
+      if (indexOnPage >= 0 && indexOnPage < taskItems.length) {
+        taskItems[indexOnPage].classList.add('active');
+      }
+      
+      // Render report summary for selected task
+      renderReportSummary(task);
+      
+      // Show summary view (not detail)
+      showReportSummary();
+    }
+
+    // Render report summary for a specific task
+    function renderReportSummary(task) {
+      const summarySection = document.getElementById('reportSummary');
+      
+      // Update task name
+      document.querySelector('#reportSummary .section-title').textContent = '1. 巡检总览 - ' + task.name;
+      
+      // Update stats
+      document.getElementById('totalHosts').textContent = task.devices.length + '台';
+      
+      // Update summary table
+      const summaryTable = summarySection.querySelector('.report-table');
+      const rows = summaryTable.querySelectorAll('tr');
+      
+      // Update left column (task info)
+      const leftCells = rows[0].querySelectorAll('td:first-child table tr');
+      leftCells[0].querySelector('td:last-child').textContent = task.name;
+      leftCells[1].querySelector('td:last-child').textContent = task.date + (task.endDate ? ' ~ ' + task.endDate : '');
+      leftCells[2].querySelector('td:last-child').textContent = task.template;
+      leftCells[3].querySelector('td:last-child').textContent = task.devices.length + '台';
+      
+      // Update right column (results)
+      const rightCells = rows[0].querySelector('td:last-child table tr');
+      rightCells[0].querySelector('td:last-child').innerHTML = '<span style="color: ' + (task.status === 'success' ? 'var(--accent-green)' : task.status === 'warning' ? 'var(--accent-yellow)' : 'var(--accent-red)') + '; font-weight: 600;">' + task.passRate + '</span>';
+      rightCells[1].querySelector('td:last-child').innerHTML = '<span style="color: var(--accent-red);">' + task.issues.high + '</span> 项';
+      rightCells[2].querySelector('td:last-child').innerHTML = '<span style="color: var(--accent-yellow);">' + task.issues.medium + '</span> 项';
+      rightCells[3].querySelector('td:last-child').innerHTML = '<span style="color: var(--accent-green);">' + task.issues.low + '</span> 项';
+      
+      // Update host summary table
+      const hostSummaryTable = document.getElementById('hostSummaryTable');
+      hostSummaryTable.innerHTML = task.devices.slice(0, 4).map((ip, index) => {
+        const detail = getHostDetailForTask(task.id, ip);
+        const riskClass = detail ? (detail.risk === 'high' ? 'risk-high' : detail.risk === 'medium' ? 'risk-medium' : 'risk-low') : 'risk-low';
+        const badgeClass = detail ? (detail.status === 'high' ? 'badge-critical' : detail.status === 'medium' ? 'badge-major' : 'badge-auto') : 'badge-auto';
+        const badgeText = detail ? (detail.status === 'high' ? '高危' : detail.status === 'medium' ? '中危' : '通过') : '通过';
+        const hostname = detail ? detail.hostname : ip;
+        const score = detail ? detail.score : 100;
+        
+        return `
+          <tr class="${index % 2 === 0 ? 'even' : 'odd'}">
+            <td style="font-family: 'JetBrains Mono';">${ip}</td>
+            <td>${hostname}</td>
+            <td><span class="${riskClass}">${score}分</span></td>
+            <td><span class="badge ${badgeClass}">${badgeText}</span></td>
+            <td><button class="action-btn" onclick="showHostDetailFromTask(${task.id}, '${ip}')"><i data-lucide="eye" style="width:16px;height:16px;"></i></button></td>
+          </tr>
+        `;
+      }).join('');
+      
+      lucide.createIcons();
+    }
+
+    // Get host detail data for a specific task
+    function getHostDetailForTask(taskId, ip) {
+      const task = inspectionTasks.find(t => t.id === taskId);
+      if (!task) return null;
+      
+      // Find real device info from devices array
+      const deviceInfo = devices.find(d => d.ip === ip);
+      const hostname = deviceInfo ? deviceInfo.hostname : 'srv-host-' + parseInt(ip.split('.').pop());
+      
+      // Use real device results if available (from newly executed inspections)
+      if (task.deviceResults && task.deviceResults[ip]) {
+        const result = task.deviceResults[ip];
+        
+        // Calculate score based on issues
+        const issuePenalty = result.issues.high * 15 + result.issues.medium * 8 + result.issues.low * 3;
+        const score = Math.max(0, 100 - issuePenalty);
+        
+        // Determine worst status
+        let status = 'pass';
+        let risk = 'low';
+        if (result.issues.high > 0) {
+          status = 'high';
+          risk = 'high';
+        } else if (result.issues.medium > 0) {
+          status = 'medium';
+          risk = 'medium';
+        }
+        
+        return {
+          hostname: hostname,
+          score: score,
+          risk: risk,
+          status: status,
+          agentStatus: deviceInfo ? deviceInfo.agentStatus : '在线',
+          checks: task.totalChecks,
+          passed: result.passed,
+          issues: result.issues
+        };
+      }
+      
+      // Fallback for tasks without deviceResults (pre-existing mock data)
+      const ipNum = parseInt(ip.split('.').pop());
+      const score = 50 + (ipNum % 40);
+      let status = 'pass';
+      let risk = 'low';
+      
+      if (task.status === 'error' || task.status === 'warning') {
+        if (ipNum % 3 === 0) {
+          status = 'high';
+          risk = 'high';
+        } else if (ipNum % 3 === 1) {
+          status = 'medium';
+          risk = 'medium';
+        }
+      }
+      
+      return {
+        hostname: hostname,
+        score: score,
+        risk: risk,
+        status: status,
+        agentStatus: deviceInfo ? deviceInfo.agentStatus : '在线',
+        checks: task.totalChecks,
+        passed: task.passed,
+        issues: {
+          high: status === 'high' ? 2 : status === 'medium' ? 1 : 0,
+          medium: status === 'high' ? 3 : status === 'medium' ? 2 : 1,
+          low: status === 'high' ? 1 : status === 'medium' ? 1 : 0
+        }
+      };
+    }
+
+    // Show host detail for a specific task
+    function showHostDetailFromTask(taskId, ip) {
+      const task = inspectionTasks.find(t => t.id === taskId);
+      const detail = getHostDetailForTask(taskId, ip);
+      
+      if (!detail) return;
+      
+      document.getElementById('reportSummary').style.display = 'none';
+      document.getElementById('reportDetail').style.display = 'block';
+      document.getElementById('exportBtn').style.display = 'block';
+      
+      // Update detail info
+      document.getElementById('detailIp').textContent = ip;
+      document.getElementById('detailHostname').textContent = detail.hostname;
+      document.getElementById('detailScore').textContent = detail.score + '分';
+      
+      // Update risk display
+      const riskText = detail.risk === 'high' ? '高危' : detail.risk === 'medium' ? '中危' : '低危';
+      document.getElementById('detailRisk').textContent = riskText + '（' + detail.score + '分）';
+      document.getElementById('detailRisk').className = 'risk-' + detail.risk;
+      
+      lucide.createIcons();
+    }
+
+    // Start new inspection (switch to execute page)
+    function startNewInspection() {
+      switchPage('execute');
+    }
+  </script>
+</body>
+</html>
